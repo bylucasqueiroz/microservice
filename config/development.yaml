@@ -1,0 +1,9 @@
+app:
+  env: dev
+  name: gokafka
+kafka:
+  topics: gokafka
+  group_id: groupkafka
+  host: localhost:9092
+  auto_offset_reset: earliest
+  session_time_out: 6000
