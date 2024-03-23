@@ -9,53 +9,17 @@ import (
 )
 
 func main() {
-	var wg sync.WaitGroup
 	fmt.Println("Start process..")
 
-	wg.Add(1)
-	go func() {
-		fmt.Println("Start consume..")
-		topics := []string{"topic"}
-		consumer, err := kafka.NewConsumer(&kafka.ConfigMap{
-			"bootstrap.servers": "localhost:9092",
-			"group.id":          "foo",
-			"auto.offset.reset": "earliest",
-		})
-		if err != nil {
-			fmt.Printf("Failed to create producer: %s\n", err)
-			os.Exit(1)
-		}
-
-		err = consumer.SubscribeTopics(topics, nil)
-		if err != nil {
-			fmt.Printf("Subscribed topics error: %s\n", err)
-			os.Exit(1)
-		}
-
-		run := true
-		for run {
-			ev := consumer.Poll(100)
-			switch e := ev.(type) {
-			case *kafka.Message:
-				fmt.Println(e.Value)
-			case kafka.Error:
-				fmt.Fprintf(os.Stderr, "%% Error: %v\n", e)
-				run = false
-				wg.Done()
-			default:
-				fmt.Printf("Ignored %v\n", e)
-			}
-		}
-
-		consumer.Close()
-	}()
+	var wg sync.WaitGroup
+	host := os.Getenv("KAFKA_ENDPOINT")
 
 	wg.Add(1)
 	go func() {
 		fmt.Println("Start produce..")
-		for {
+		for i := 0; i < 10; i++ {
 			p, err := kafka.NewProducer(&kafka.ConfigMap{
-				"bootstrap.servers": "localhost:9092",
+				"bootstrap.servers": host,
 				"client.id":         "teste",
 				"acks":              "all",
 			})
@@ -88,6 +52,42 @@ func main() {
 			}
 			close(delivery_chan)
 		}
+	}()
+
+	wg.Add(1)
+	go func() {
+		fmt.Println("Start consume..")
+		topics := []string{"topic"}
+		consumer, err := kafka.NewConsumer(&kafka.ConfigMap{
+			"bootstrap.servers": host,
+			"group.id":          "teste",
+			"auto.offset.reset": "earliest",
+		})
+		if err != nil {
+			fmt.Printf("Failed to create consumer: %s\n", err)
+			os.Exit(1)
+		}
+
+		err = consumer.SubscribeTopics(topics, nil)
+		if err != nil {
+			fmt.Printf("Subscribed topics error: %s\n", err)
+			os.Exit(1)
+		}
+
+		run := true
+		for run {
+			ev := consumer.Poll(100)
+			switch e := ev.(type) {
+			case *kafka.Message:
+				fmt.Printf("Consumed %v\n", string(e.Value))
+			case kafka.Error:
+				fmt.Fprintf(os.Stderr, "%% Error: %v\n", e)
+				run = false
+				wg.Done()
+			}
+		}
+
+		consumer.Close()
 	}()
 
 	wg.Wait()

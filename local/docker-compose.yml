@@ -1,18 +1,5 @@
 version: '3.8'
 services:
-  app:
-    build:
-      context: ../app/
-      dockerfile: ../app/Dockerfile
-    ports:
-      - 3000:3000
-    environment:
-      AWS_ENDPOINT: localstack:4566
-      KAFKA_ENDPOINT: kafka:19092
-      PORT: 3000
-      AWS_ACCESS_KEY_ID: dummy
-      AWS_SECRET_ACCESS_KEY: dummy
-
   localstack:
     image: localstack/localstack
     ports:
@@ -58,3 +45,19 @@ services:
      - "8080:8080"
    depends_on:
      - kafka
+
+  app:
+    build:
+      context: ../app/
+      dockerfile: ../app/Dockerfile
+    ports:
+      - 3000:3000
+    environment:
+      PORT: 3000
+      KAFKA_ENDPOINT: kafka:19092
+      AWS_ENDPOINT: localstack:4566
+      AWS_ACCESS_KEY_ID: dummy
+      AWS_SECRET_ACCESS_KEY: dummy
+    depends_on:
+     - kafka
+     - localstack
