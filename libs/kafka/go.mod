@@ -1,4 +1,4 @@
-module microservice
+module kafkalib
 
 go 1.22.0
 

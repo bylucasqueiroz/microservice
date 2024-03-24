@@ -5,6 +5,7 @@ import (
 	"os"
 	"sync"
 
+	csm "github.com/bylucasqueiroz/microservice/libs/kafka"
 	"github.com/confluentinc/confluent-kafka-go/kafka"
 )
 
@@ -53,42 +54,16 @@ func main() {
 			close(delivery_chan)
 		}
 	}()
-
-	wg.Add(1)
-	go func() {
-		fmt.Println("Start consume..")
-		topics := []string{"topic"}
-		consumer, err := kafka.NewConsumer(&kafka.ConfigMap{
-			"bootstrap.servers": host,
-			"group.id":          "teste",
-			"auto.offset.reset": "earliest",
-		})
-		if err != nil {
-			fmt.Printf("Failed to create consumer: %s\n", err)
-			os.Exit(1)
-		}
-
-		err = consumer.SubscribeTopics(topics, nil)
-		if err != nil {
-			fmt.Printf("Subscribed topics error: %s\n", err)
-			os.Exit(1)
-		}
-
-		run := true
-		for run {
-			ev := consumer.Poll(100)
-			switch e := ev.(type) {
-			case *kafka.Message:
-				fmt.Printf("Consumed %v\n", string(e.Value))
-			case kafka.Error:
-				fmt.Fprintf(os.Stderr, "%% Error: %v\n", e)
-				run = false
-				wg.Done()
-			}
-		}
-
-		consumer.Close()
-	}()
-
 	wg.Wait()
+
+	consume := csm.NewKafkaConsumer(&csm.KafkaConsumerConfig{
+		Host:            host,
+		GroupId:         "group1",
+		AutoOffsetReset: "earliest",
+		Topics:          []string{"teste"},
+	})
+
+	go consume.Consume()
+
+	consume.WaitConsumerDone()
 }

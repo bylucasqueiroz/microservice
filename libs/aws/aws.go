@@ -1,0 +1,4 @@
+package awslib
+
+func NewConsumer() {
+}

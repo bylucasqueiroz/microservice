@@ -48,8 +48,8 @@ services:
 
   app:
     build:
-      context: ../app/
-      dockerfile: ../app/Dockerfile
+      context: ./
+      dockerfile: ./one/Dockerfile
     ports:
       - 3000:3000
     environment:
