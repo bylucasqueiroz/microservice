@@ -16,9 +16,10 @@ type KafkaConsumer struct {
 
 type KafkaConsumerConfig struct {
 	Host            string
+	Acks            string
+	Topics          []string
 	GroupId         string
 	AutoOffsetReset string
-	Topics          []string
 }
 
 func NewKafkaConsumer(cfg *KafkaConsumerConfig) *KafkaConsumer {

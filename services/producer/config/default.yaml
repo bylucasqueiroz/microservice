@@ -1,0 +1,12 @@
+app:
+  env: default
+  name: gokafka
+  worker_size: 10
+  number_of_message: 10
+kafka:
+  topics: gokafka
+  group_id: groupkafka
+  host: localhost:9092
+  auto_offset_reset: earliest
+  session_timeout: 6000
+  pool_timeout: 100
